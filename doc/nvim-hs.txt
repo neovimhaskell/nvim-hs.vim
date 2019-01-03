@@ -4,9 +4,9 @@ Functions to help start nvim-hs plugins                               *nvim-hs*
 
 This plugin provides functions to start and compile nvim-hs plugins. The main
 intent for this plugin is to allow users of nvim-hs plugins to install them as
-they do normal nvim plugins. If you want to control the default behavior set
-the variable g:nvimhsPluginStarter appropriately, just pick one of the
-following lines: >
+they do normal nvim plugins. If you want to control the default behavior of
+how to build nvim-hs plugins, set the variable g:nvimhsPluginStarter
+appropriately, just pick one of the following lines: >
 
   let g:nvimhsPluginStarter=nvimhs#stack#pluginstarter()
 <
@@ -17,17 +17,50 @@ The remaining documentation is only useful for nvim-hs plugin authors and to
 debug errors of this plugin.
 
 ===============================================================================
-CONTENTS                                                     *nvim-hs-contents*
+CONTENTS                                                       *nvimhsContents*
 
-1. Usage .................. |nvim-hs-usage|
-2. Extending .............. |nvim-hs-extending|
-3. Contributing ........... |nvim-hs-contributing|
-4. Bugs ................... |nvim-hs-contributing|
-5. LICENSE ................ |nvim-hs-license|
+1. Usage .................. |nvimhsUsage|
+2. Extending .............. |nvimhsExtending|
+3. Contributing ........... |nvimhsContributing|
+4. Bugs ................... |nvimhsBugs|
+5. LICENSE ................ |nvimhsLicense|
 
 ===============================================================================
-USAGE                                                           *nvim-hs-usage*
+USAGE                                                             *nvimhsUsage*
 
+As a plugin author, you have to add a little boilerplate to your repository.
+
+The steps in this section only make sense if you have a haskell library that
+exposes a neovim plugin. A tutorial on how to write that can be found here:
+
+https://hackage.haskell.org/package/nvim-hs/docs/Neovim-Plugin.html
+
+First, you have to add an executable section to the .cabal file of your
+plugin. >
+  executable nvim-hs-my-plugin
+    main-is:              Main.hs
+    hs-source-dirs:       executable
+    default-language:     Haskell2010
+    ghc-options:          -threaded -rtsopts -with-rtsopts=-N
+    build-depends:        base >=4.9 && <5
+                        , nvim-hs
+                        , nvim-hs-my-plugin
+<
+You only have to adjust the name of the executable (here: nvim-hs-my-plugin)
+and the dependency to nvim-hs-my-plugin to how you named you plugin. You
+probably wnat to name the executable and library the same way.
+
+Then you create the file Main.hs in the directory executable with the following
+content: >
+  module Main where
+
+  import Neovim
+
+  import qualified Module.With.MyPlugin as MyPlugin
+
+  main :: IO ()
+  main = neovim defaultConfig { plugins = [ MyPlugin.plugin ] }
+<
 Create a file that is loaded by neovim on startup or when the apropriate
 filetype is opened and add the following line (e.g. to plugin/start.hs): >
 
@@ -40,14 +73,13 @@ according to the depth of the vim file.
 The second argument is the name of the executable which must match the
 executable entry in the '.cabal' file of the plugin.
 
-The third argument are the command line arguments to pass to the executable.
-If you use the default implementation of the executable, you can call it with
---help to see available command line options. >
-
-  main = neovim defaultConfig { plugins = [ myPlugin ] }
+The third argument is the command line arguments to pass to the executable,
+usually an empty list. For debugging purposes, adding a log file and the log
+level can be helpful. E.g.: >
+  ['-v', 'DEBUG', '-l', '/tmp/myplugin.log']
 <
 ===============================================================================
-EXTENDING                                                   *nvim-hs-extending*
+EXTENDING                                                     *nvimhsExtending*
 
 This plugin provides basically three things.
 
@@ -93,7 +125,7 @@ This plugin provides basically three things.
   General code improvement are always welcome.
 
 ===============================================================================
-CONTRIBUTING                                             *nvim-hs-contributing*
+CONTRIBUTING                                               *nvimhsContributing*
 
 If you want to contribute, feel free to open a ticket. Bug reports,
 documentation enhancements, ideas and feature pull requests are generally
@@ -102,12 +134,12 @@ welcome.
 https://github.com/neovimhaskell/nvim-hs
 
 ===============================================================================
-BUGS                                                     *nvim-hs-contributing*
+BUGS                                                               *nvimhsBugs*
 
 Please report bugs to: https://github.com/neovimhaskell/nvim-hs.vim
 
 ===============================================================================
-LICENSE                                                       *nvim-hs-license*
+LICENSE                                                         *nvimhsLicense*
 
 This project is licensed under Apache 2 license.
 
