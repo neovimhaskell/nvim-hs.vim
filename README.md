@@ -4,6 +4,9 @@ This repository/plugin contains functions to help start a
 [nvim-hs](https://github.com/neovimhaskell/nvim-hs) plugin as a separate
 process.
 
+More detailed help is available via `:help nvim-hs.txt` once this plugin is
+installed.
+
 ## Installation
 
 Install this as you would any other github-based plugin.
@@ -12,12 +15,12 @@ If you use [vim-plug](https://github.com/junegunn/vim-plug), simply add
 it as a plugin:
 
 ```vimL
-Plug 'saep/nvim-hs.vim'
+Plug 'neovimhaskell/nvim-hs.vim'
 ```
 
 If you have a preference for a tool chain, configure the variable
 `g:nvimhsPluginStarter`. By default `stack` is used. The following starters are
-shipped with this plugin, simply copy paste the one you like to your neovim
+shipped with this plugin, simply copy and paste the one you like to your neovim
 configuration:
 
 ```vimL

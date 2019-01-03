@@ -1,0 +1,117 @@
+*nvim-hs* *nvim-hs.txt*         nvim-hs.vim
+
+Functions to help start nvim-hs plugins                               *nvim-hs*
+
+This plugin provides functions to start and compile nvim-hs plugins. The main
+intent for this plugin is to allow users of nvim-hs plugins to install them as
+they do normal nvim plugins. If you want to control the default behavior set
+the variable g:nvimhsPluginStarter appropriately, just pick one of the
+following lines: >
+
+  let g:nvimhsPluginStarter=nvimhs#stack#pluginstarter()
+<
+If the compilation of a plugin failed, the build output and commands to
+reproduce the build are openend in a new tabpage.
+
+The remaining documentation is only useful for nvim-hs plugin authors and to
+debug errors of this plugin.
+
+===============================================================================
+CONTENTS                                                     *nvim-hs-contents*
+
+1. Usage .................. |nvim-hs-usage|
+2. Extending .............. |nvim-hs-extending|
+3. Contributing ........... |nvim-hs-contributing|
+4. Bugs ................... |nvim-hs-contributing|
+5. LICENSE ................ |nvim-hs-license|
+
+===============================================================================
+USAGE                                                           *nvim-hs-usage*
+
+Create a file that is loaded by neovim on startup or when the apropriate
+filetype is opened and add the following line (e.g. to plugin/start.hs): >
+
+  nvimhs#start(expand('<sfile>:p:h:h'), 'name-of-executable', [])
+<
+The first argument must be the directory of the plugin. It will usually look
+the same as in the example and only the number of ':h' suffixes may change
+according to the depth of the vim file.
+
+The second argument is the name of the executable which must match the
+executable entry in the '.cabal' file of the plugin.
+
+The third argument are the command line arguments to pass to the executable.
+If you use the default implementation of the executable, you can call it with
+--help to see available command line options. >
+
+  main = neovim defaultConfig { plugins = [ myPlugin ] }
+<
+===============================================================================
+EXTENDING                                                   *nvim-hs-extending*
+
+This plugin provides basically three things.
+
+1. Plugin starters
+
+  These are basically instructions on how to build and run a plugin. If you
+  favorite build tool isn't in there, feel free to create the appropriate
+  plugin starter and open a pull request.
+
+  An implementation provides an object with the following elments:
+
+  - buildCommand
+
+    This function is passed the name of the plugin executable and must return
+    a command line that can be passed to |jobstart|. It is executed with the
+    plugin's directory as the working directory. Example: >
+
+        function! nvimhs#stack#buildCommand(name)
+                return [ 'stack', 'build', a:name ]
+        endfunction
+<
+  - exePath
+
+    This function is passed the directory of the plugin and the name of the
+    plugin executable and should return the full path to the executable.
+    Example: >
+
+        function! nvimhs#stack#exePath(workingDirectory, name)
+                let l:stackPath = nvimhs#execute(a:workingDirectory,
+                        \ ['stack', 'path', '--local-install-root'])
+
+                return join(l:stackPath, '') . '/bin/' . a:name
+        endfunction
+<
+
+2. Test code if an executable has to be rebuild
+
+  This can be as simple as testing whether the git commit hash of the last
+  build is different to the current commit hash of the plugin directory.
+
+3. Functions to start an nvim-hs based plugin.
+
+  General code improvement are always welcome.
+
+===============================================================================
+CONTRIBUTING                                             *nvim-hs-contributing*
+
+If you want to contribute, feel free to open a ticket. Bug reports,
+documentation enhancements, ideas and feature pull requests are generally
+welcome.
+
+https://github.com/neovimhaskell/nvim-hs
+
+===============================================================================
+BUGS                                                     *nvim-hs-contributing*
+
+Please report bugs to: https://github.com/neovimhaskell/nvim-hs.vim
+
+===============================================================================
+LICENSE                                                       *nvim-hs-license*
+
+This project is licensed under Apache 2 license.
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+===============================================================================
+vim:tw=80:et:wrap:ft=help:norl:
