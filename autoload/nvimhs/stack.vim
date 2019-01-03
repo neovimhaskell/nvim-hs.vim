@@ -1,20 +1,18 @@
 function! nvimhs#stack#pluginstarter()
 	return
-				\ { 'build': function('nvimhs#stack#build')
-				\ , 'start': function('nvimhs#stack#start')
+				\ { 'buildCommand': function('nvimhs#stack#buildCommand')
+				\ , 'exePath': function('nvimhs#stack#exePath')
 				\ }
 endfunction
 
-function! nvimhs#stack#build(workingDirectory, name)
-	" TODO error handling
-	return jobwait(
-				\ [ jobstart( [ 'stack', 'build' ]
-				\           , { 'cwd': a:workingDirectory })
-				\ ])
+
+function! nvimhs#stack#buildCommand(name)
+	return [ 'stack', 'build', a:name ]
 endfunction
 
-function! nvimhs#stack#start(workingDirectory, name)
-	return jobstart( [ 'stack', 'exec', a:name, '--', a:name ]
-				\  , { 'rpc': v:true, 'cwd': a:workingDirectory }
-				\  )
+
+function! nvimhs#stack#exePath(workingDirectory, name)
+	let l:stackPath = nvimhs#execute(a:workingDirectory,
+				\ ['stack', 'path', '--local-install-root'])
+	return join(l:stackPath, '') . '/bin/' . a:name
 endfunction
