@@ -64,7 +64,7 @@ content: >
 Create a file that is loaded by neovim on startup or when the apropriate
 filetype is opened and add the following line (e.g. to plugin/start.hs): >
 
-  nvimhs#start(expand('<sfile>:p:h:h'), 'name-of-executable', [])
+  call nvimhs#start(expand('<sfile>:p:h:h'), 'name-of-executable', [])
 <
 The first argument must be the directory of the plugin. It will usually look
 the same as in the example and only the number of ':h' suffixes may change
