@@ -18,36 +18,47 @@ function! nvimhs#start(workingDirectory, name, args)
 	if ! len(s:cached_bin_paths)
 		call s:readCachedBinPaths()
 	endif
+	let s:cached_start_params_by_name[a:name] =
+				\ { 'cwd': a:workingDirectory, 'args': a:args }
 	try
-		return remote#host#Require(a:name)
-	catch
-		let l:starter = get(g:, 'nvimhsPluginStarter', {})
-		if len(l:starter) == 0
-			let l:starter = nvimhs#stack#pluginstarter()
+		let l:chan = remote#host#Require(a:name)
+		if l:chan
+			return l:chan
 		endif
-
-		let l:Factory = function('s:buildStartAndRegister'
-					\ , [ { 'pluginStarter': l:starter
-					\     , 'cwd': a:workingDirectory
-					\     , 'name': a:name
-					\     , 'args': a:args
-					\     }
-					\   ])
-		call remote#host#Register(a:name, '*', l:Factory)
-		return remote#host#Require(a:name)
+	catch
+		" continue
 	endtry
+	let l:starter = get(g:, 'nvimhsPluginStarter', {})
+	if len(l:starter) == 0
+		let l:starter = nvimhs#stack#pluginstarter()
+	endif
+
+	let l:Factory = function('s:buildStartAndRegister'
+				\ , [ { 'pluginStarter': l:starter
+				\     , 'cwd': a:workingDirectory
+				\     , 'name': a:name
+				\     , 'args': a:args
+				\     }
+				\   ])
+	call remote#host#Register(a:name, '*', l:Factory)
+	return remote#host#Require(a:name)
 endfunction
 
 " This will forcibly close the RPC channel and call nvimhs#start. This will
 " cause the state of the plugin to be lost. There is no standard way to keep
 " state across restarts yet, so use with care.
-function! nvimhs#restart(workingDirectory, name)
+function! nvimhs#restart(name)
 	try
 		if remote#host#IsRunning(a:name)
 			call chanclose(remote#host#Require(a:name))
 		endif
 	finally
-		call nvimhs#start(a:workingDirectory, a:name)
+		let l:startParams = get(s:cached_start_params_by_name, a:name, {})
+		if len(l:startParams)
+			call nvimhs#start(l:startParams.cwd, a:name, l:startParams.args)
+		else
+			throw 'Cannot find cached startup information for ' . a:name
+		endif
 	endtry
 endfunction
 
@@ -133,7 +144,10 @@ function! nvimhs#execute(directory, cmd)
 	if type(a:cmd) == type([])
 		let l:cmd = a:cmd
 	else
-		let l:cmd = a:cmd.cmd
+		let l:cmd = get(a:cmd, 'cmd', [])
+	endif
+	if len(l:cmd) == 0
+		return []
 	endif
 	let l:job = jobstart(l:cmd, {
 				\ 'on_stdout': l:Fout,
@@ -234,6 +248,7 @@ endfunction
 " Caching {{{1
 let s:cache_dir = exists('$XDG_CACHE_HOME') ? $XDG_CACHE_HOME : $HOME . '/.cache'
 let s:cached_bin_paths_file = expand(s:cache_dir) . '/nvim/nvim-hs-bin-paths'
+let s:cached_start_params_by_name = {}
 let s:cached_bin_paths = {}
 
 
