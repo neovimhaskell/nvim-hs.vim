@@ -62,7 +62,7 @@ content: >
   main = neovim defaultConfig { plugins = [ MyPlugin.plugin ] }
 <
 Create a file that is loaded by neovim on startup or when the apropriate
-filetype is opened and add the following line (e.g. to plugin/start.hs): >
+filetype is opened and add the following line (e.g. to plugin/start.vim): >
 
   nvimhs#start(expand('<sfile>:p:h:h'), 'name-of-executable', [])
 <
