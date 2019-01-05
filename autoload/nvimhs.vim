@@ -15,15 +15,25 @@
 " Exposed API {{{1
 
 function! nvimhs#start(workingDirectory, name, args)
+	echom a:workingDirectory . ' ' . a:name . ' ' . join(a:args)
 	if ! len(s:cached_bin_paths)
 		call s:readCachedBinPaths()
 	endif
-	let s:cached_start_params_by_name[a:name] =
-				\ { 'cwd': a:workingDirectory, 'args': a:args }
+	call s:addStartParams(a:name, a:workingDirectory, a:args)
+	echo s:cached_start_params_by_name
 	try
 		let l:chan = remote#host#Require(a:name)
 		if l:chan
-			return l:chan
+			try
+				" Hack to test if the channel is still working
+				call rpcrequest(l:chan, 'Ping', [])
+				return l:chan
+			catch 'No Provider for:.*'
+				" Message returned by nvim-hs if the function does not exist
+				return l:chan
+			catch
+				" Channel is not working, call the usual starting mechanism
+			endtry
 		endif
 	catch
 		" continue
@@ -50,16 +60,32 @@ endfunction
 function! nvimhs#restart(name)
 	try
 		if remote#host#IsRunning(a:name)
+			echom 'closing channel: ' . a:name
 			call chanclose(remote#host#Require(a:name))
 		endif
 	finally
 		let l:startParams = get(s:cached_start_params_by_name, a:name, {})
 		if len(l:startParams)
+			echom 'calling start'
 			call nvimhs#start(l:startParams.cwd, a:name, l:startParams.args)
 		else
+			echo s:cached_start_params_by_name
+			echo l:startParams
 			throw 'Cannot find cached startup information for ' . a:name
 		endif
 	endtry
+endfunction
+
+" This function basically calls nvimhs#restart, except that the
+" recompilation of the plugin is guaranteed. For implementation reasons,
+" this variant can be useful if you did not commit your changes in the
+" repository that the plugin resides in.
+function! nvimhs#compileAndRestart(name)
+	let l:startParams = get(s:cached_start_params_by_name, a:name, {})
+	if len(l:startParams)
+		let s:cached_bin_paths[l:startParams.cwd]['hash'] = ''
+	endif
+	call nvimhs#restart(a:name)
 endfunction
 
 " Utility functions {{{2
@@ -260,6 +286,11 @@ function! s:addBinPath(absolute_plugin_dir, absolute_bin_file, buildId)
 	return l:cached
 endfunction
 
+function! s:addStartParams(name, workingDirectory, args)
+	let l:params = { 'cwd': a:workingDirectory, 'args': a:args }
+	let s:cached_start_params_by_name[a:name] = l:params
+	return l:params
+endfunction
 
 function! s:readCachedBinPaths()
 	try

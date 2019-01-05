@@ -19,14 +19,15 @@ debug errors of this plugin.
 ===============================================================================
 CONTENTS                                                       *nvimhsContents*
 
-1. Usage .................. |nvimhsUsage|
-2. Extending .............. |nvimhsExtending|
-3. Contributing ........... |nvimhsContributing|
-4. Bugs ................... |nvimhsBugs|
-5. LICENSE ................ |nvimhsLicense|
+1. Plugin configuration ... |nvimhsPluginConfiguration|
+2. Interactive usage ...... |nvimhsInteractiveUsage|
+3. Extending .............. |nvimhsExtending|
+4. Contributing ........... |nvimhsContributing|
+5. Bugs ................... |nvimhsBugs|
+6. LICENSE ................ |nvimhsLicense|
 
 ===============================================================================
-USAGE                                                             *nvimhsUsage*
+PLUGIN CONFIGURATION                                *nvimhsPluginConfiguration*
 
 As a plugin author, you have to add a little boilerplate to your repository.
 
@@ -78,6 +79,22 @@ usually an empty list. For debugging purposes, adding a log file and the log
 level can be helpful. E.g.: >
   ['-v', 'DEBUG', '-l', '/tmp/myplugin.log']
 <
+===============================================================================
+INTERACTIVE USAGE                                      *nvimhsInteractiveUsage*
+
+This plugin also provides a few functions that may be useful for developing
+nvim-hs plugins.
+
+If you want to recompile and restart a plugin that is already running, you can
+bind a key like this: >
+
+  nnoremap <F5> :call nvimhs#compileAndRestart('name-of-the-plugin')<CR>
+<
+This will open a new tab with the compiler output if the compilation fails.
+While this is useful, you can have a better user experience using a standard
+repl (a ghci session) or a plugin fulfilling a similar role and only call this
+function if there are no errors there.
+
 ===============================================================================
 EXTENDING                                                     *nvimhsExtending*
 
