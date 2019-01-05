@@ -15,12 +15,10 @@
 " Exposed API {{{1
 
 function! nvimhs#start(workingDirectory, name, args)
-	echom a:workingDirectory . ' ' . a:name . ' ' . join(a:args)
 	if ! len(s:cached_bin_paths)
 		call s:readCachedBinPaths()
 	endif
 	call s:addStartParams(a:name, a:workingDirectory, a:args)
-	echo s:cached_start_params_by_name
 	try
 		let l:chan = remote#host#Require(a:name)
 		if l:chan
@@ -60,17 +58,13 @@ endfunction
 function! nvimhs#restart(name)
 	try
 		if remote#host#IsRunning(a:name)
-			echom 'closing channel: ' . a:name
 			call chanclose(remote#host#Require(a:name))
 		endif
 	finally
 		let l:startParams = get(s:cached_start_params_by_name, a:name, {})
 		if len(l:startParams)
-			echom 'calling start'
 			call nvimhs#start(l:startParams.cwd, a:name, l:startParams.args)
 		else
-			echo s:cached_start_params_by_name
-			echo l:startParams
 			throw 'Cannot find cached startup information for ' . a:name
 		endif
 	endtry
