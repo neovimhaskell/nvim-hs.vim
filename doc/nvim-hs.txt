@@ -1,6 +1,6 @@
 *nvim-hs* *nvim-hs.txt*         nvim-hs.vim
 
-Functions to help start nvim-hs plugins                               *nvim-hs*
+Functions to help start nvim-hs plugins
 
 This plugin provides functions to start and compile nvim-hs plugins. The main
 intent for this plugin is to allow users of nvim-hs plugins to install them as
