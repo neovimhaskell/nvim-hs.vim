@@ -87,7 +87,7 @@ endfunction
 function! nvimhs#gitCommitHash(directory)
 	return join(
 				\ nvimhs#execute(a:directory,
-				\   { 'cmd': ['git', 'rev-parse', 'HEAD'] })
+				\   { 'cmd': 'git rev-parse HEAD || echo no-commits-or-repository' })
 				\ , '')
 endfunction
 
@@ -250,7 +250,7 @@ function! s:buildStartAndRegister(pluginHost, host_info)
 					\                , [a:pluginHost, l:cached]
 					\                )
 
-		let l:testAndBuild = { 'cmd': ['git', 'rev-parse', 'HEAD']
+		let l:testAndBuild = { 'cmd': 'git rev-parse HEAD || echo no-commits-or-repository'
 					\        , 'nextStep': l:IfHashDiffers
 					\        }
 		call nvimhs#executeAsync(a:pluginHost.cwd, l:testAndBuild)
