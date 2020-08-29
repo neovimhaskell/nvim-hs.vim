@@ -14,6 +14,9 @@
 
 " Exposed API {{{1
 
+let s:invalid_hash='no-repository-or-dirty-repository-state'
+let s:test_if_rebuild_is_probably_necessary = '[ -z "$(git status --porcelain=v1 2>/dev/null)" ] && git rev-parse HEAD 2>/dev/null || echo ' . s:invalid_hash
+
 function! nvimhs#start(workingDirectory, name, args)
 	if ! len(s:cached_bin_paths)
 		call s:readCachedBinPaths()
@@ -83,11 +86,12 @@ function! nvimhs#compileAndRestart(name)
 endfunction
 
 " Utility functions {{{2
+
 " Synchronously determine the git commit hash of a directory.
 function! nvimhs#gitCommitHash(directory)
 	return join(
 				\ nvimhs#execute(a:directory,
-				\   { 'cmd': 'git rev-parse HEAD || echo no-commits-or-repository' })
+				\   { 'cmd': s:test_if_rebuild_is_probably_necessary})
 				\ , '')
 endfunction
 
@@ -163,8 +167,12 @@ function! nvimhs#execute(directory, cmd)
 				\ [a:directory, a:cmd, l:out, l:err])
 	if type(a:cmd) == type([])
 		let l:cmd = a:cmd
-	else
+	elseif type(a:cmd) == type('')
+		let l:cmd = a:cmd
+	elseif type(a:cmd) == type({})
 		let l:cmd = get(a:cmd, 'cmd', [])
+	else
+		return []
 	endif
 	if len(l:cmd) == 0
 		return []
@@ -221,7 +229,9 @@ endfunction
 
 function! s:ifHashDiffersBuildAndStart(pluginHost, cached, out)
 	let l:currentHash = join(a:out, '')
-	if l:currentHash == get(a:cached, 'hash', '') && len(l:currentHash)
+	if l:currentHash == get(a:cached, 'hash', '')
+				\ && len(l:currentHash)
+				\ && l:currentHash != s:invalid_hash
 		return {}
 	else
 		let l:buildCommand = call( a:pluginHost.pluginStarter.buildCommand
@@ -250,7 +260,7 @@ function! s:buildStartAndRegister(pluginHost, host_info)
 					\                , [a:pluginHost, l:cached]
 					\                )
 
-		let l:testAndBuild = { 'cmd': 'git rev-parse HEAD || echo no-commits-or-repository'
+		let l:testAndBuild = { 'cmd': s:test_if_rebuild_is_probably_necessary
 					\        , 'nextStep': l:IfHashDiffers
 					\        }
 		call nvimhs#executeAsync(a:pluginHost.cwd, l:testAndBuild)
