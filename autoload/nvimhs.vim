@@ -29,7 +29,7 @@ function! nvimhs#start(workingDirectory, name, args)
 				" Hack to test if the channel is still working
 				call rpcrequest(l:chan, 'Ping', [])
 				return l:chan
-			catch 'No Provider for:.*'
+			catch '.*No provider for:.*'
 				" Message returned by nvim-hs if the function does not exist
 				return l:chan
 			catch
